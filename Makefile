@@ -1,19 +1,18 @@
 TARGET            =    c8
-EXTENSION         =    elf
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
-INCLUDES          =    include
+INCLUDES          =    include /usr/i686-w64-mingw32/include/ncurses /usr/x86_64-w64-mingw32/include/SDL2
 CUSTOM_LIBS       =
 
 DEFINES           =
-ARCH              =    -march=native -fpie
-FLAGS             =    -Wall -Wextra -Wpedantic -pipe `sdl2-config --cflags`
+ARCH              =    -march=native
+FLAGS             =    -Wall -Wextra -Wpedantic -pipe
 CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++17
 ASFLAGS           =
-LDFLAGS           =    -Wl,-pie `sdl2-config --libs`
-LINKS             =    -lncurses -lpthread
+LDFLAGS           =    -static
+LINKS             =    -lncurses -lpthread -lssp `/usr/bin/x86_64-w64-mingw32-pkg-config sdl2 --static --libs`
 
 RELEASE_DEFINES   =    $(DEFINES) NDEBUG=1
 RELEASE_FLAGS     =    $(FLAGS) -O2 -ffunction-sections -fdata-sections -flto
@@ -29,7 +28,7 @@ DEBUG_CXXFLAGS    =    $(CXXFLAGS)
 DEBUG_ASFLAGS     =    $(ASFLAGS) -g
 DEBUG_LDFLAGS     =    $(LDFLAGS) -g -ggdb -Wl,-Map,$(BUILD)/$(TARGET)-dbg.map -fno-lto
 
-PREFIX            =
+PREFIX            =    /usr/bin/x86_64-w64-mingw32-
 CC                =    $(PREFIX)gcc
 CXX               =    $(PREFIX)g++
 AS                =    $(PREFIX)as
@@ -51,13 +50,13 @@ DEBUG_OFILES      =    $(CFILES:%=$(BUILD)/%-dbg.o) $(CPPFILES:%=$(BUILD)/%-dbg.
 DFILES            =    $(RELEASE_OFILES:.o=.d) $(DEBUG_OFILES:.o=.d)
 
 LIBS_TARGET       =    $(shell find $(addsuffix /lib,$(CUSTOM_LIBS)) -name "*.a" 2>/dev/null)
-RELEASE_TARGET    =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(TARGET).$(EXTENSION))
-DEBUG_TARGET      =    $(if $(OUT:=), $(OUT)/$(TARGET)-dbg.$(EXTENSION), .$(OUT)/$(TARGET)-dbg.$(EXTENSION))
+RELEASE_TARGET    =    $(if $(OUT:=), $(OUT)/$(TARGET), .$(OUT)/$(TARGET))
+DEBUG_TARGET      =    $(if $(OUT:=), $(OUT)/$(TARGET)-dbg, .$(OUT)/$(TARGET)-dbg)
 
 REL_DEFINES_FLAGS =    $(addprefix -D,$(RELEASE_DEFINES))
 DBG_DEFINES_FLAGS =    $(addprefix -D,$(DEBUG_DEFINES))
 
-INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
+INCLUDE_FLAGS     =    $(addprefix -I,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(dir)/include) \
 					   $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
 LIB_FLAGS         =    $(foreach dir,$(LIBS),-L$(dir)/lib)
 
